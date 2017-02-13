@@ -4,5 +4,5 @@ function term() {
 }
 
 trap term SIGTERM SIGINT 
-sh /export-gce-pd-stats.sh &
+sh /loop.sh &
 wait $(jobs -p)

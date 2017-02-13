@@ -1,40 +1,27 @@
 #!/bin/sh
 
-host=$(hostname)
 disks="/dev/disk/by-id/google-*"
-outfile="/tmp/prometheus/gce_pd.prom"
-interval=30
 if [ ! -z "${ROOTFS}" ]; then
     disks=${ROOTFS}${disks}
 fi
-if [ ! -z "${UPDATE_INTERVAL}" ]; then
-    interval=${UPDATE_INTERVAL}
-fi
-if [ ! -z "${OUTFILE}" ]; then
-    outfile=${OUTFILE}
-fi
-mkdir -p $(dirname ${outfile})
 
-while (true); do
-    stats=""
-    for gce_pd in $(ls ${disks}); do
-        diskStats=$(df -B1 ${gce_pd} 2>/dev/null | grep -v ^Filesystem)
-        IFS=$'\n'
-        for disk in ${diskStats}; do
-            pd_name=$(echo $gce_pd | sed -e 's|.*by-id/google-||')
-            device=$(echo $disk | awk '{print $1}')
-            size=$(echo $disk | awk '{print $2}')
-            used=$(echo $disk | awk '{print $3}')
-            avail=$(echo $disk | awk '{print $4}')
-            mountpoint=$(echo $disk | awk '{print $6}')
-            if [ ! -z "${ROOTFS}" ]; then
-                mountpoint=$(echo $mountpoint | sed -e "s|${ROOTFS}||")
-            fi
-            stats=$stats"gce_pd_size{pd_name=\"${pd_name}\",device=\"${device}\",mountpoint=\"${mountpoint}\",host=\"${host}\"} ${size}\n"
-            stats=$stats"gce_pd_used{pd_name=\"${pd_name}\",device=\"${device}\",mountpoint=\"${mountpoint}\",host=\"${host}\"} ${used}\n"
-            stats=$stats"gce_pd_available{pd_name=\"${pd_name}\",device=\"${device}\",mountpoint=\"${mountpoint}\",host=\"${host}\"} ${avail}\n"
-        done
+stats=""
+for gce_pd in $(ls ${disks}); do
+    diskStats=$(df -B1 ${gce_pd} 2>/dev/null | grep -v ^Filesystem)
+    IFS=$'\n'
+    for disk in ${diskStats}; do
+        pd_name=$(echo $gce_pd | sed -e 's|.*by-id/google-||')
+        device=$(echo $disk | awk '{print $1}')
+        size=$(echo $disk | awk '{print $2}')
+        used=$(echo $disk | awk '{print $3}')
+        avail=$(echo $disk | awk '{print $4}')
+        mountpoint=$(echo $disk | awk '{print $6}')
+        if [ ! -z "${ROOTFS}" ]; then
+            mountpoint=$(echo $mountpoint | sed -e "s|${ROOTFS}||")
+        fi
+        stats=$stats"gce_pd_size{pd_name=\"${pd_name}\",device=\"${device}\",mountpoint=\"${mountpoint}\",host=\"${host}\"} ${size}\n"
+        stats=$stats"gce_pd_used{pd_name=\"${pd_name}\",device=\"${device}\",mountpoint=\"${mountpoint}\",host=\"${host}\"} ${used}\n"
+        stats=$stats"gce_pd_available{pd_name=\"${pd_name}\",device=\"${device}\",mountpoint=\"${mountpoint}\",host=\"${host}\"} ${avail}\n"
     done
-    echo -e "$stats" | sort | grep -v '^$' > ${outfile}
-    sleep ${interval}
 done
+echo -e "$stats" | sort | grep -v '^$'
