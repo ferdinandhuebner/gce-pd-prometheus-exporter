@@ -1,6 +1,6 @@
 #!/bin/sh
 
-IMAGE=quay.io.ferdi/gce-pd-prometheus-exporter
+IMAGE=quay.io/ferdi/gce-pd-prometheus-exporter
 host=$(hostname)
 interval=30
 outfile="/tmp/prometheus/gce_pd.prom"
