@@ -4,6 +4,10 @@ disks="/dev/disk/by-id/google-*"
 if [ ! -z "${ROOTFS}" ]; then
     disks=${ROOTFS}${disks}
 fi
+host="$(hostname)"
+if [ ! -z "${HOSTNAME_OVERRIDE}" ]; then
+    host=${HOSTNAME_OVERRIDE}
+fi
 
 stats=""
 for gce_pd in $(ls ${disks}); do
